@@ -7,6 +7,8 @@ module proj_mod
   private
 
   public proj_type
+  public latlon_crs
+  public lcc_crs
 
   integer(c_int), public, parameter :: PJ_FWD   =  1
   integer(c_int), public, parameter :: PJ_IDENT =  0
@@ -111,6 +113,55 @@ contains
     this%dst_crs = crs
 
   end subroutine proj_set_dst_crs
+
+  function latlon_crs(ellps) result(res)
+
+    character(*), intent(in), optional :: ellps
+    character(256) res
+
+    character(256) ellps_
+
+    if (present(ellps)) then
+      ellps_ = ellps
+    else
+      ellps_ = 'sphere'
+    end if
+
+    res = '+proj=latlon +ellps=' // trim(ellps_)
+
+  end function latlon_crs
+
+  function lcc_crs(lat_0, lon_0, lat_1, lat_2, ellps) result(res)
+
+    real(8), intent(in) :: lat_0
+    real(8), intent(in) :: lon_0
+    real(8), intent(in) :: lat_1
+    real(8), intent(in) :: lat_2
+    character(*), intent(in), optional :: ellps
+    character(256) res
+
+    character(10) lat_0_s, lon_0_s, lat_1_s, lat_2_s
+    character(256) ellps_
+
+    if (present(ellps)) then
+      ellps_ = ellps
+    else
+      ellps_ = 'sphere'
+    end if
+
+    write(lat_0_s, '(F10.5)') lat_0
+    write(lon_0_s, '(F10.5)') lon_0
+    write(lat_1_s, '(F10.5)') lat_1
+    write(lat_2_s, '(F10.5)') lat_2
+
+    write(res, '("+proj=lcc +lat_0=", A, " +lon=", A, " +lat_1=", A, " +lat_2=", A, " +ellps=", A)') &
+      trim(adjustl(lat_0_s)), &
+      trim(adjustl(lon_0_s)), &
+      trim(adjustl(lat_1_s)), &
+      trim(adjustl(lat_2_s)), &
+      trim(ellps_)
+
+  end function lcc_crs
 
   subroutine proj_transform(this, xi, yi, xo, yo)
 
