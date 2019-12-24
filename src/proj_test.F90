@@ -21,9 +21,9 @@ program proj_test
   call p%init(src_crs, dst_crs)
   lon = 105.5837
   lat = 36.14387
-  print *, x, y
   call p%transform(lon, lat, x, y)
-  print *, x, y
+  call assert_equal(x, 0.0d0, __FILE__, __LINE__)
+  call assert_equal(y, 0.0d0, __FILE__, __LINE__)
 
   call test_suite_report(test_suite)
 

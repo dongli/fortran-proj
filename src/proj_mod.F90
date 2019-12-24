@@ -25,71 +25,8 @@ module proj_mod
     final :: proj_final
   end type proj_type
 
-  type, bind(c) :: PJ_XYZT
-    real(c_double) x
-    real(c_double) y
-    real(c_double) z
-    real(c_double) t
-  end type PJ_XYZT
-
-  type, bind(c) :: PJ_UVWT
-    real(c_double) u
-    real(c_double) v
-    real(c_double) w
-    real(c_double) t
-  end type PJ_UVWT
-
-  type, bind(c) :: PJ_LPZT
-    real(c_double) lam
-    real(c_double) phi
-    real(c_double) z
-    real(c_double) t
-  end type PJ_LPZT
-
-  type, bind(c) :: PJ_XYZ
-    real(c_double) x
-    real(c_double) y
-    real(c_double) z
-  end type PJ_XYZ
-
-  type, bind(c) :: PJ_UVW
-    real(c_double) u
-    real(c_double) v
-    real(c_double) w
-  end type PJ_UVW
-
-  type, bind(c) :: PJ_LPZ
-    real(c_double) lam
-    real(c_double) phi
-    real(c_double) z
-  end type PJ_LPZ
-
-  type, bind(c) :: PJ_XY
-    real(c_double) x
-    real(c_double) y
-  end type PJ_XY
-
-  type, bind(c) :: PJ_UV
-    real(c_double) u
-    real(c_double) v
-  end type PJ_UV
-
-  type, bind(c) :: PJ_LP
-    real(c_double) lam
-    real(c_double) phi
-  end type PJ_LP
-
   type, bind(c) :: PJ_COORD
     real(c_double) v(4)
-    type(PJ_XYZT) xyzt
-    type(PJ_UVWT) uvwt
-    type(PJ_LPZT) lpzt
-    type(PJ_XYZ) xyz
-    type(PJ_UVW) uvw
-    type(PJ_LPZ) lpz
-    type(PJ_XY) xy
-    type(PJ_UV) uv
-    type(PJ_LP) lp
   end type PJ_COORD
 
   interface
@@ -115,6 +52,15 @@ module proj_mod
       type(c_ptr), value :: pj
     end subroutine proj_destroy
 
+    type(PJ_COORD) function proj_coord(x, y, z, t) bind(c)
+      use, intrinsic :: iso_c_binding
+      import PJ_COORD
+      real(c_double), value :: x
+      real(c_double), value :: y
+      real(c_double), value :: z
+      real(c_double), value :: t
+    end function proj_coord
+
     type(PJ_COORD) function proj_trans(pj, direction, coord) bind(c)
       use, intrinsic :: iso_c_binding
       import PJ_COORD
@@ -122,6 +68,16 @@ module proj_mod
       integer(c_int), value :: direction
       type(PJ_COORD), value :: coord
     end function proj_trans
+
+    integer(c_int) function proj_errno(pj) bind(c)
+      use, intrinsic :: iso_c_binding
+      type(c_ptr), value :: pj
+    end function proj_errno
+
+    type(c_ptr) function proj_errno_string(ierr) bind(c)
+      use, intrinsic :: iso_c_binding
+      integer(c_int), value :: ierr
+    end function proj_errno_string
   end interface
 
 contains
@@ -159,44 +115,25 @@ contains
   subroutine proj_transform(this, xi, yi, xo, yo)
 
     class(proj_type), intent(inout) :: this
-    class(*), intent(in) :: xi
-    class(*), intent(in) :: yi
-    class(*), intent(out) :: xo
-    class(*), intent(out) :: yo
+    real(8), intent(in) :: xi
+    real(8), intent(in) :: yi
+    real(8), intent(out) :: xo
+    real(8), intent(out) :: yo
 
     type(PJ_COORD) pj_xi, pj_xo
 
     if (.not. c_associated(this%pj)) then
       this%pj = proj_create_crs_to_crs(this%ctx, this%src_crs, this%dst_crs, c_null_ptr)
+      if (proj_errno(this%pj) /= 0) then
+        write(*, *) '[Error]: Failed to create pj object!'
+        stop 1
+      end if
     end if
 
-    select type (xi)
-    type is (real(4))
-      pj_xi%lpzt%lam = xi
-    type is (real(8))
-      pj_xi%lpzt%lam = xi
-    end select
-    select type (yi)
-    type is (real(4))
-      pj_xi%lpzt%phi = yi
-    type is (real(8))
-      pj_xi%lpzt%phi = yi
-    end select
-    print *, pj_xi
+    pj_xi = proj_coord(xi, yi, 0.0d0, 0.0d0)
     pj_xo = proj_trans(this%pj, PJ_FWD, pj_xi)
-    print *, pj_xo
-    select type (xo)
-    type is (real(4))
-      xo = pj_xo%xyzt%x
-    type is (real(8))
-      xo = pj_xo%xyzt%x
-    end select
-    select type (yo)
-    type is (real(4))
-      yo = pj_xo%xyzt%y
-    type is (real(8))
-      yo = pj_xo%xyzt%y
-    end select
+    xo = pj_xo%v(1)
+    yo = pj_xo%v(2)
 
   end subroutine proj_transform
 
@@ -208,5 +145,14 @@ contains
     if (c_associated(this%pj)) call proj_destroy(this%pj)
 
   end subroutine proj_final
+
+  function get_proj_error_message(ierr) result(res)
+
+    integer, intent(in) :: ierr
+    character, pointer :: res(:)
+
+    call c_f_pointer(proj_errno_string(ierr), res)
+
+  end function get_proj_error_message
 
 end module proj_mod
