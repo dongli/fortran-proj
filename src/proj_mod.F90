@@ -182,6 +182,9 @@ contains
       this%pj = proj_create_crs_to_crs(this%ctx, this%src_crs, this%dst_crs, c_null_ptr)
       if (proj_errno(this%pj) /= 0) then
         write(*, *) '[Error]: Failed to create pj object!'
+        write(*, *) trim(this%src_crs)
+        write(*, *) trim(this%dst_crs)
+        write(*, *) get_proj_error_message(proj_errno(this%pj))
         stop 1
       end if
     end if
