@@ -3,16 +3,14 @@ cmake_minimum_required(VERSION 3.6)
 project(fortran-proj LANGUAGES C Fortran)
 
 if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ffree-line-length-none -O2")
 elseif (CMAKE_Fortran_COMPILER_ID STREQUAL "Intel")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -traceback")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O2")
 endif ()
 get_directory_property(parent_dir PARENT_DIRECTORY)
 
 include(FindPkgConfig)
 pkg_check_modules(PROJ REQUIRED proj)
-include_directories(${PROJ_INCLUDE_DIRS})
-link_directories(${PROJ_LIBRARY_DIRS})
 
 if (NOT parent_dir)
   add_subdirectory(lib/unit-test)
@@ -24,7 +22,9 @@ set(sources
 )
 
 add_library(fortran_proj ${sources})
-target_link_libraries(fortran_proj proj)
+target_include_directories(fortran_proj PUBLIC ${PROJ_INCLUDE_DIRS})
+target_link_directories(fortran_proj PUBLIC ${PROJ_LIBRARY_DIRS})
+target_link_libraries(fortran_proj ${PROJ_LIBRARIES})
 
 if (NOT parent_dir)
   add_executable(proj_test.exe src/proj_test.F90)

@@ -80,6 +80,11 @@ module proj_mod
       use, intrinsic :: iso_c_binding
       integer(c_int), value :: ierr
     end function proj_errno_string
+
+    integer(c_int) function strlen(str) bind(c)
+      import
+      type(c_ptr), value :: str
+    end function strlen
   end interface
 
 contains
@@ -202,7 +207,10 @@ contains
     integer, intent(in) :: ierr
     character, pointer :: res(:)
 
-    call c_f_pointer(proj_errno_string(ierr), res)
+    type(c_ptr) err
+
+    err = proj_errno_string(ierr)
+    call c_f_pointer(err, res, [strlen(err)])
 
   end function get_proj_error_message
 
