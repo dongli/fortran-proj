@@ -172,7 +172,7 @@ contains
     write(lat_1_s, '(F10.5)') lat_1
     write(lat_2_s, '(F10.5)') lat_2
 
-    write(res, '("+proj=lcc +lat_0=", A, " +lon=", A, " +lat_1=", A, " +lat_2=", A, " +x_0=", A, " +y_0=", A, " +ellps=", A)') &
+    write(res, '("+proj=lcc +lat_0=", A, " +lon_0=", A, " +lat_1=", A, " +lat_2=", A, " +x_0=", A, " +y_0=", A, " +ellps=", A)') &
       trim(adjustl(lat_0_s)), &
       trim(adjustl(lon_0_s)), &
       trim(adjustl(lat_1_s)), &

@@ -16,8 +16,8 @@ program proj_test
   lon = 105.5837d0
   lat = 36.14387d0
   call p%transform(lon, lat, x, y)
-  call assert_approximate(x, 6812865.19d0, __FILE__, __LINE__)
-  call assert_approximate(y, 5280049.19d0, __FILE__, __LINE__)
+  call assert_approximate(x, 0.0d0, __FILE__, __LINE__)
+  call assert_approximate(y, 0.0d0, __FILE__, __LINE__)
 
   call test_suite_report()
 
