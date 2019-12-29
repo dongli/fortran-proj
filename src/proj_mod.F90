@@ -136,18 +136,31 @@ contains
 
   end function latlon_crs
 
-  function lcc_crs(lat_0, lon_0, lat_1, lat_2, ellps) result(res)
+  function lcc_crs(lat_0, lon_0, lat_1, lat_2, x_0, y_0, ellps) result(res)
 
     real(8), intent(in) :: lat_0
     real(8), intent(in) :: lon_0
     real(8), intent(in) :: lat_1
     real(8), intent(in) :: lat_2
+    real(8), intent(in), optional :: x_0
+    real(8), intent(in), optional :: y_0
     character(*), intent(in), optional :: ellps
     character(256) res
 
     character(10) lat_0_s, lon_0_s, lat_1_s, lat_2_s
+    character(20) x_0_s, y_0_s
     character(256) ellps_
 
+    if (present(x_0)) then
+      write(x_0_s, '(F20.5)') x_0
+    else
+      x_0_s = '0.0'
+    end if
+    if (present(y_0)) then
+      write(y_0_s, '(F20.5)') y_0
+    else
+      y_0_s = '0.0'
+    end if
     if (present(ellps)) then
       ellps_ = ellps
     else
@@ -159,11 +172,13 @@ contains
     write(lat_1_s, '(F10.5)') lat_1
     write(lat_2_s, '(F10.5)') lat_2
 
-    write(res, '("+proj=lcc +lat_0=", A, " +lon=", A, " +lat_1=", A, " +lat_2=", A, " +ellps=", A)') &
+    write(res, '("+proj=lcc +lat_0=", A, " +lon=", A, " +lat_1=", A, " +lat_2=", A, " +x_0=", A, " +y_0=", A, " +ellps=", A)') &
       trim(adjustl(lat_0_s)), &
       trim(adjustl(lon_0_s)), &
       trim(adjustl(lat_1_s)), &
       trim(adjustl(lat_2_s)), &
+      trim(adjustl(x_0_s)), &
+      trim(adjustl(y_0_s)), &
       trim(ellps_)
 
   end function lcc_crs
