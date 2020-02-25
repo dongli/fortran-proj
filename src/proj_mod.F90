@@ -23,6 +23,8 @@ module proj_mod
     procedure :: init => proj_init
     procedure, private :: proj_transform_r4, proj_transform_r8
     generic :: transform => proj_transform_r4, proj_transform_r8
+    procedure, private :: proj_inverse_transform_r4, proj_inverse_transform_r8
+    generic :: inverse_transform => proj_inverse_transform_r4, proj_inverse_transform_r8
     final :: proj_final
   end type proj_type
 
@@ -262,6 +264,44 @@ contains
     yo = pj_xo%v(2)
 
   end subroutine proj_transform_r8
+
+  subroutine proj_inverse_transform_r4(this, xi, yi, xo, yo)
+
+    class(proj_type), intent(inout) :: this
+    real(4), intent(in) :: xi
+    real(4), intent(in) :: yi
+    real(4), intent(out) :: xo
+    real(4), intent(out) :: yo
+
+    real(8) x8, y8
+
+    call this%inverse_transform(dble(xi), dble(yi), x8, y8)
+    xo = x8
+    yo = y8
+
+  end subroutine proj_inverse_transform_r4
+
+  subroutine proj_inverse_transform_r8(this, xi, yi, xo, yo)
+
+    class(proj_type), intent(inout) :: this
+    real(8), intent(in) :: xi
+    real(8), intent(in) :: yi
+    real(8), intent(out) :: xo
+    real(8), intent(out) :: yo
+
+    type(PJ_COORD) pj_xi, pj_xo
+
+    if (.not. c_associated(this%pj)) then
+      write(*, *) '[Error]: Projection object is not initialized!'
+      stop 1
+    end if
+
+    pj_xi = proj_coord(xi, yi, 0.0d0, 0.0d0)
+    pj_xo = proj_trans(this%pj, PJ_INV, pj_xi)
+    xo = pj_xo%v(1)
+    yo = pj_xo%v(2)
+
+  end subroutine proj_inverse_transform_r8
 
   subroutine proj_final(this)
 
